@@ -8,7 +8,7 @@ This plugin uses [geotiff.js](https://github.com/constantinius/geotiff.js)  and 
 ## Instructions
 
 1. Include the JavaScript file and dependencies:
-'``html
+```html
     <script src="//npmcdn.com/leaflet@1.0.3/dist/leaflet.js"></script>
     <script src="vendor/geotiff.js"></script>
     <script src="vendor/plotty.js"></script>
