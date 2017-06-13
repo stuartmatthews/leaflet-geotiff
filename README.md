@@ -28,7 +28,7 @@ This plugin uses [geotiff.js](https://github.com/constantinius/geotiff.js) and [
     * `clampLow`, `clampHigh` - (optional, default = true) If true values outside `displayMin` to `displayMax` will be rendered as if they were valid values.
     * `vector` - (optional, default = false) If true the data is interpreted as a direction and rendered as arrows.
     * `arrowSize` - (optional, default = 20) Size in pixels of direction arrows for vector data.
-    * `clip` - (optional, default = undefined) Clipping polygon, provided as an araay of [lat,lon] coordinates.
+    * `clip` - (optional, default = undefined) Clipping polygon, provided as an array of [lat,lon] coordinates.
     
 
 3. Data values can be extracted using the `getValueAtLatLng(lat,lng)` method.
