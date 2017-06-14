@@ -20,7 +20,7 @@ This plugin uses [geotiff.js](https://github.com/constantinius/geotiff.js) and [
 2. Add a geoTIFF layer `L.leafletGeotiff(url,options)`
   * `url` - geoTIFF file url.  Currently only EPSG:4326 files are supported.
   * `options`:
-    * `bounds` - (optional) Leaflet [Bounds](http://leafletjs.com/reference-1.0.3.html#bounds) object.  If omitted the image bounds will be read from the geoTIFF file.
+    * `bounds` - (optional) An array specifying the corners of the data, e.g. [[40.712216, -74.22655], [40.773941, -74.12544]].  If omitted the image bounds will be read from the geoTIFF file.
     * `band` - (optional, default = 0) geoTIFF band to read.   
     * `image` - (optional, default = 0) geoTIFF image to read.    
     * `colorScale` - (optional, default = "rainbow").  Plotty color scale used to render the image.

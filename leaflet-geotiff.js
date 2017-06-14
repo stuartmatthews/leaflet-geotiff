@@ -20,7 +20,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
     initialize: function (url, options) { 
         this.raster = {};
         if (options.bounds) {
-            this._bounds = L.latLngBounds(options.bounds);
+            this._rasterBounds = L.latLngBounds(options.bounds);
         } 
         L.Util.setOptions(this, options);
         
@@ -90,7 +90,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             var x_max = x_min + meta.ModelPixelScale[0]*meta.ImageWidth;
             var y_min = meta.ModelTiepoint[4];
             var y_max = y_min - meta.ModelPixelScale[1]*meta.ImageLength;
-            this._bounds = L.latLngBounds([[y_min,x_min],[y_max,x_max]]);
+            this._rasterBounds = L.latLngBounds([[y_min,x_min],[y_max,x_max]]);
             this._reset()
         }
     },
@@ -124,8 +124,8 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
     },
     getValueAtLatLng: function (lat, lng) {
         try {
-            var x = Math.floor(this.raster.width*(lng - this._bounds._southWest.lng)/(this._bounds._northEast.lng - this._bounds._southWest.lng)); 
-            var y = this.raster.height-Math.ceil(this.raster.height*(lat - this._bounds._southWest.lat)/(this._bounds._northEast.lat - this._bounds._southWest.lat)); 
+            var x = Math.floor(this.raster.width*(lng - this._rasterBounds._southWest.lng)/(this._rasterBounds._northEast.lng - this._rasterBounds._southWest.lng)); 
+            var y = this.raster.height-Math.ceil(this.raster.height*(lat - this._rasterBounds._southWest.lat)/(this._rasterBounds._northEast.lat - this._rasterBounds._southWest.lat)); 
             var i = y*this.raster.width+x
             return this.raster.data[i];
         }
@@ -134,11 +134,13 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         }
     },
 	_animateZoom: function (e) {
-        //TODO Animate zoom
+        var scale = this._map.getZoomScale(e.zoom),
+		    offset = this._map._latLngBoundsToNewLayerBounds(this._map.getBounds(), e.zoom, e.center).min;
+		L.DomUtil.setTransform(this._image, offset, scale);
 	},
     _reset: function () {
         if (this.hasOwnProperty('_map')) {
-            if (this._bounds) {
+            if (this._rasterBounds) {
                 topLeft = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest()),
                 size = this._map.latLngToLayerPoint(this._map.getBounds().getSouthEast())._subtract(topLeft);
 
@@ -163,17 +165,15 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         this.colorScaleData = plot.colorScaleCanvas.toDataURL();            
     },
     setClip: function(clipLatLngs) {
-        this._setClip(clipLatLngs);
+        this.options.clip = clipLatLngs;
         this._reset();
     },
-    _setClip: function(clipLatLngs) {
-        this.options.clip = clipLatLngs;
-
-        if (clipLatLngs) {
+    _clipMaskToPixelPoints: function() {
+        if (this.options.clip) {
             var topLeft = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest());
             var pixelClipPoints = [];
-            for (var p = 0; p < clipLatLngs.length; p++) {
-                var mercPoint = this._map.latLngToLayerPoint(clipLatLngs[p]),
+            for (var p = 0; p < this.options.clip.length; p++) {
+                var mercPoint = this._map.latLngToLayerPoint(this.options.clip[p]),
                     pixel = L.point(mercPoint.x - topLeft.x, mercPoint.y - topLeft.y);
                 pixelClipPoints.push(pixel);
             }
@@ -187,7 +187,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         if (self.raster.hasOwnProperty('data')) {
             topLeft = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest()),
             size = this._map.latLngToLayerPoint(this._map.getBounds().getSouthEast())._subtract(topLeft);
-            var rasterPixelBounds = L.bounds(this._map.latLngToContainerPoint(this._bounds.getNorthWest()),this._map.latLngToContainerPoint(this._bounds.getSouthEast()))
+            var rasterPixelBounds = L.bounds(this._map.latLngToContainerPoint(this._rasterBounds.getNorthWest()),this._map.latLngToContainerPoint(this._rasterBounds.getSouthEast()))
             var xStart = (rasterPixelBounds.min.x>0 ? rasterPixelBounds.min.x : 0);
             var xFinish = (rasterPixelBounds.max.x<size.x ? rasterPixelBounds.max.x : size.x);
             var yStart = (rasterPixelBounds.min.y>0 ? rasterPixelBounds.min.y : 0);
@@ -208,8 +208,8 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
 
             var xOrigin = this._map.getPixelBounds().min.x+xStart;
             var yOrigin = this._map.getPixelBounds().min.y+yStart;
-            var lngSpan = (this._bounds._northEast.lng - this._bounds._southWest.lng)/this.raster.width;
-            var latSpan = (this._bounds._northEast.lat - this._bounds._southWest.lat)/this.raster.height;
+            var lngSpan = (this._rasterBounds._northEast.lng - this._rasterBounds._southWest.lng)/this.raster.width;
+            var latSpan = (this._rasterBounds._northEast.lat - this._rasterBounds._southWest.lat)/this.raster.height;
 
             //Draw image data to canvas and pass to image element
             var plotCanvas = document.createElement("canvas");
@@ -229,8 +229,8 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                         var rasterIndex = (y*this.raster.width+x);
                         if (self.raster.data[rasterIndex]>=0) { //Ignore missing values
                             //calculate lat-lon of of this point
-                            var currentLng = this._bounds._southWest.lng + (x+0.5)*lngSpan;
-                            var currentLat = this._bounds._northEast.lat - (y+0.5)*latSpan;
+                            var currentLng = this._rasterBounds._southWest.lng + (x+0.5)*lngSpan;
+                            var currentLat = this._rasterBounds._northEast.lat - (y+0.5)*latSpan;
                                                     
                             //convert lat-lon to pixel cordinates
                             var projected = this._map.latLngToContainerPoint(L.latLng(currentLat,currentLng)); //If slow could unpack this calculation
@@ -293,7 +293,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                 for (var y=0;y<plotHeight;y++) {
                     var yUntransformed = ((yOrigin+y) / scale - transformationD) / transformationC;
                     var currentLat = (2 * Math.atan(Math.exp(yUntransformed)) - (Math.PI / 2)) * d;
-                    var rasterY = this.raster.height-Math.ceil((currentLat - this._bounds._southWest.lat)/latSpan);
+                    var rasterY = this.raster.height-Math.ceil((currentLat - this._rasterBounds._southWest.lat)/latSpan);
                     
                     for (var x=0;x<plotWidth;x++) {
                         //Location to draw to
@@ -304,7 +304,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                         //Used to deal with TIF being EPSG:4326 (lat,lon) and map being EPSG:3857 (m E,m N)
                         var xUntransformed = ((xOrigin+x) / scale - transformationB) / transformationA;
                         var currentLng = xUntransformed * d;
-                        var rasterX = Math.floor((currentLng - this._bounds._southWest.lng)/lngSpan); 
+                        var rasterX = Math.floor((currentLng - this._rasterBounds._southWest.lng)/lngSpan); 
 
                         var rasterIndex = (rasterY*this.raster.width+rasterX);
 
@@ -317,7 +317,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
    
             //Draw clipping polygon
             if (this.options.clip) {
-                this._setClip(this.options.clip);
+                this._clipMaskToPixelPoints();
                 ctx.globalCompositeOperation = 'destination-out'
                 ctx.rect(xStart-10,yStart-10,plotWidth+20,plotHeight+20);
                 //Draw vertices in reverse order
