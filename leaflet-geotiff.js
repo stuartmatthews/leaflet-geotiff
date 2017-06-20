@@ -134,9 +134,19 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         }
     },
 	_animateZoom: function (e) {
-        var scale = this._map.getZoomScale(e.zoom),
-		    offset = this._map._latLngBoundsToNewLayerBounds(this._map.getBounds(), e.zoom, e.center).min;
-		L.DomUtil.setTransform(this._image, offset, scale);
+        if (L.version >= "1.0") {
+            var scale = this._map.getZoomScale(e.zoom),
+                offset = this._map._latLngBoundsToNewLayerBounds(this._map.getBounds(), e.zoom, e.center).min;
+            L.DomUtil.setTransform(this._image, offset, scale);
+        } else {
+            var scale = this._map.getZoomScale(e.zoom),
+                nw = this._map.getBounds().getNorthWest(),
+                se = this._map.getBounds().getSouthEast(),
+                topLeft = this._map._latLngToNewLayerPoint(nw, e.zoom, e.center),
+                size = this._map._latLngToNewLayerPoint(se, e.zoom, e.center)._subtract(topLeft);
+            this._image.style[L.DomUtil.TRANSFORM] =
+		        L.DomUtil.getTranslateString(topLeft) + ' scale(' + scale + ') ';
+        }
 	},
     _reset: function () {
         if (this.hasOwnProperty('_map')) {
