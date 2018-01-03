@@ -172,6 +172,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             colorScale: this.options.colorScale,
             clampLow: this.options.clampLow,
             clampHigh: this.options.clampHigh,
+            useWebGL: false,
         });
         this.colorScaleData = plot.colorScaleCanvas.toDataURL();            
     },
@@ -226,10 +227,11 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             var plotCanvas = document.createElement("canvas");
             plotCanvas.width = size.x;
             plotCanvas.height = size.y;
-            var ctx = plotCanvas.getContext("2d");
-            ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
 
             if (this.options.vector==true) {
+                var ctx = plotCanvas.getContext("2d");
+                ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
+
                 var arrowSize = this.options.arrowSize;
                 var zoom = this._map.getZoom();
                 var gridPxelSize = (rasterPixelBounds.max.x - rasterPixelBounds.min.x) / self.raster.width;
@@ -264,30 +266,6 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                     }
                 }
             } else {
-                var plottyCanvas = document.createElement("canvas");
-                var plot = new plotty.plot({
-                    data: self.raster.data,
-                    width: self.raster.width, height: self.raster.height,
-                    domain: [self.options.displayMin, self.options.displayMax], 
-                    colorScale: this.options.colorScale,
-                    clampLow: this.options.clampLow,
-                    clampHigh: this.options.clampHigh,
-                    canvas: plottyCanvas,
-                    useWebGL: false,
-                });
-                plot.setNoDataValue(-9999); 
-                plot.render();
-
-                this.colorScaleData = plot.colorScaleCanvas.toDataURL();            
-                var rasterImageData = plottyCanvas.getContext("2d").getImageData(0,0,plottyCanvas.width, plottyCanvas.height);
-
-                //Create image data and Uint32 views of data to speed up copying
-                var imageData = new ImageData(plotWidth, plotHeight);
-                var outData = imageData.data;
-                var outPixelsU32 = new Uint32Array(outData.buffer);
-                var inData = rasterImageData.data;
-                var inPixelsU32 = new Uint32Array(inData.buffer);
-
                 var zoom = this._map.getZoom();
                 var scale = this._map.options.crs.scale(zoom);
                 var d = 57.29577951308232; //L.LatLng.RAD_TO_DEG;
@@ -300,30 +278,38 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                     transformationA = transformationA*this._map.options.crs.projection.R;
                     transformationC = transformationC*this._map.options.crs.projection.R;
                 }
-
-                for (var y=0;y<plotHeight;y++) {
-                    var yUntransformed = ((yOrigin+y) / scale - transformationD) / transformationC;
-                    var currentLat = (2 * Math.atan(Math.exp(yUntransformed)) - (Math.PI / 2)) * d;
-                    var rasterY = this.raster.height-Math.ceil((currentLat - this._rasterBounds._southWest.lat)/latSpan);
-                    
-                    for (var x=0;x<plotWidth;x++) {
-                        //Location to draw to
-                        var index = (y*plotWidth+x);
-
-                        //Calculate lat-lng of (x,y)
-                        //This code is based on leaflet code, unpacked to run as fast as possible
-                        //Used to deal with TIF being EPSG:4326 (lat,lon) and map being EPSG:3857 (m E,m N)
-                        var xUntransformed = ((xOrigin+x) / scale - transformationB) / transformationA;
-                        var currentLng = xUntransformed * d;
-                        var rasterX = Math.floor((currentLng - this._rasterBounds._southWest.lng)/lngSpan); 
-
-                        var rasterIndex = (rasterY*this.raster.width+rasterX);
-
-                        //Copy pixel value
-                        outPixelsU32[index] = inPixelsU32[rasterIndex];
-                    }
-                }    
-                ctx.putImageData(imageData, xStart, yStart); 
+                
+                var plottyCanvas = document.createElement("canvas");
+                var plot = new geoPlotty.plot({
+                    data: self.raster.data,
+                    dataWidth: self.raster.width, dataHeight: self.raster.height,
+                    north: this._rasterBounds._northEast.lat,
+                    south: this._rasterBounds._southWest.lat,
+                    east: this._rasterBounds._northEast.lng,
+                    west: this._rasterBounds._southWest.lng,
+                    domain: [self.options.displayMin, self.options.displayMax], 
+                    colorScale: this.options.colorScale,
+                    clampLow: this.options.clampLow,
+                    clampHigh: this.options.clampHigh,
+                    canvas: plottyCanvas,
+                    useWebGL: true,
+                });
+                plot.setNoDataValue(-9999); 
+                plot.render({
+                    plotWidth: plotWidth, plotHeight: plotHeight,
+                    xOrigin: xOrigin,
+                    yOrigin: yOrigin,
+                    transformationA: transformationA,
+                    transformationB: transformationB,
+                    transformationC: transformationC,
+                    transformationD: transformationD,
+                    scale: scale,
+                    d: d,
+                });
+                
+                this.colorScaleData = plot.colorScaleCanvas.toDataURL();            
+                var ctx = plotCanvas.getContext("2d");
+                ctx.drawImage(plottyCanvas,xStart,yStart);
             }
    
             //Draw clipping polygon
