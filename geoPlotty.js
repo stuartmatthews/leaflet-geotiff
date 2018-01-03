@@ -113,7 +113,7 @@ var geoPlotty = (function() {
       float value = texture2D(u_textureData, vec2(rasterX,rasterY))[0];
       
       if (value == u_noDataValue)
-        gl_FragColor = vec4(0.0, 0, 0, 0.0);
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
       else if ((!u_clampLow && value < u_domain[0]) || (!u_clampHigh && value > u_domain[1]))
         gl_FragColor = vec4(0, 0, 0, 0);
       else {
@@ -159,6 +159,7 @@ var geoPlotty = (function() {
     // check if a webgl context is requested and available and set up the shaders
     var gl;
     if (defaultFor(options.useWebGL, true) && (gl = create3DContext(this.canvas))) {
+       console.log('gl');
       this.gl = gl;
 
       // create the shader program

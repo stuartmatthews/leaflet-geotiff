@@ -62,6 +62,9 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         }
     },
     _getData: function(url) {
+        //Create worker here so it has parsed geotiff.js before the data arrives
+        this.tifWorker = new Worker('lib/tifReader.js');
+
         var self = this;
         var request = new XMLHttpRequest();  
         request.onload = function() {
@@ -74,26 +77,17 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         request.send();
     },
     _parseTIFF: function (arrayBuffer) {
-        this.tiff = GeoTIFF.parse(arrayBuffer);
+        this.tifWorker.postMessage({'data':arrayBuffer},[arrayBuffer]);
         
-        if (typeof(this.options.image)=='undefined') {
-            this.options.image = 0;
+        var self = this;
+        this.tifWorker.onmessage = function (e) {
+            self.raster.data = new Float32Array(e.data.data_buffer);
+            self.raster.width = e.data.width; 
+            self.raster.height = e.data.height; 
+            self._rasterBounds = L.latLngBounds(e.data.bounds);
+            self._reset()
         }
-        if (typeof(this.options.band)=='undefined') {
-            this.options.band = 0;
-        }
-        this.setBand(this.options.band);
-  
-        if (!this.options.bounds) {
-            var image = this.tiff.getImage(this.options.image);
-            var meta = image.getFileDirectory();
-            var x_min = meta.ModelTiepoint[3];
-            var x_max = x_min + meta.ModelPixelScale[0]*meta.ImageWidth;
-            var y_min = meta.ModelTiepoint[4];
-            var y_max = y_min - meta.ModelPixelScale[1]*meta.ImageLength;
-            this._rasterBounds = L.latLngBounds([[y_min,x_min],[y_max,x_max]]);
-            this._reset()
-        }
+        
     },
     setBand: function (band) {
         this.options.band = band
