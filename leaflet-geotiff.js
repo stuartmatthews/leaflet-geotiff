@@ -228,9 +228,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         }
     },
 
-	transform: function(canvas, args) {
-		var rasterImageData = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
-
+	transform: function(rasterImageData, args) {
 		//Create image data and Uint32 views of data to speed up copying
 		var imageData = new ImageData(args.plotWidth, args.plotHeight);
 		var outData = imageData.data;

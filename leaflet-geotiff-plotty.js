@@ -68,8 +68,9 @@ L.LeafletGeotiff.Plotty = L.LeafletGeotiffRenderer.extend({
 		plot.render();
 
 		this.colorScaleData = plot.colorScaleCanvas.toDataURL();
-		
-		var imageData = this.parent.transform(plottyCanvas, args);
+
+		var rasterImageData = plottyCanvas.getContext("2d").getImageData(0, 0, plottyCanvas.width, plottyCanvas.height);
+		var imageData = this.parent.transform(rasterImageData, args);
 		ctx.putImageData(imageData, args.xStart, args.yStart); 
 	}
 
