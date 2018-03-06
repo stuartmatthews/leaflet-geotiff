@@ -352,8 +352,8 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
     },
 });
 
-L.leafletGeotiff = function (url, bounds, options) {
-    return new L.LeafletGeotiff(url, bounds, options);
+L.leafletGeotiff = function (url, options) {
+    return new L.LeafletGeotiff(url, options);
 };
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
