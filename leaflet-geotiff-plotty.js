@@ -2,8 +2,7 @@
 // https://github.com/santilland/plotty
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	var L = require('leaflet');
-	L.LeafletGeotiff = require('leaflet-geotiff');
+	var L = require('leaflet-geotiff');
 	var plotty = require('plotty');
 }
 
@@ -85,5 +84,5 @@ L.LeafletGeotiff.plotty = function (options) {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	module.exports = L.LeafletGeotiff.plotty;
+	module.exports = L.LeafletGeotiff;
 }

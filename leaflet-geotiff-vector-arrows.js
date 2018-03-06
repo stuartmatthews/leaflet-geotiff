@@ -1,9 +1,5 @@
-// Depends on:
-// https://github.com/santilland/plotty
-
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	var L = require('leaflet');
-	L.LeafletGeotiff = require('leaflet-geotiff');
+	var L = require('leaflet-geotiff');
 }
 
 L.LeafletGeotiff.VectorArrows = L.LeafletGeotiffRenderer.extend({
@@ -64,5 +60,5 @@ L.LeafletGeotiff.vectorArrows= function (options) {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	module.exports = L.LeafletGeotiff.vectorArrows;
+	module.exports = L.LeafletGeotiff;
 }
