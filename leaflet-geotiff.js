@@ -355,5 +355,5 @@ L.leafletGeotiff = function (url, bounds, options) {
 };
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-	module.exports = L.LeafletGeotiff;
+	module.exports = L.leafletGeotiff;
 }
