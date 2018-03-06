@@ -19,6 +19,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             throw new Error("GeoTIFF not defined");
         };
 
+		this._url = url;
         this.raster = {};
         if (options.bounds) {
             this._rasterBounds = L.latLngBounds(options.bounds);
@@ -31,10 +32,11 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         this.options.arrowSize = (options.arrowSize==undefined) ? 20 : options.arrowSize;
         
         this._preLoadColorScale(); //Make sure colorScale is ready even if image takes a while to load
-        this._getData(url);
+        this._getData();
     },
     setURL: function(newURL) {
-        this._getData(newURL);
+		this._url = newURL;
+        this._getData();
     },
     onAdd: function (map) {
         this._map = map;
@@ -61,7 +63,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             map.off('zoomanim', this._animateZoom, this);
         }
     },
-    _getData: function(url) {
+    _getData: function() {
         var self = this;
         var request = new XMLHttpRequest();  
         request.onload = function() {
@@ -69,7 +71,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
                 self._parseTIFF(this.response);
             } //TODO else handle error
         };
-        request.open("GET", url, true);
+        request.open("GET", this._url, true);
         request.responseType = "arraybuffer";
         request.send();
     },
