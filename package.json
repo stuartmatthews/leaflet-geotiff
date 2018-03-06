@@ -4,7 +4,9 @@
 	"version": "0.1.0",
 	"license": "MIT",
 	"author": "Stuart Matthews",
+	"main": "leaflet-geotiff.js",
 	"dependencies": {
+		"leaflet": "^1.0.0",
 		"geotiff": "^0.4.1",
 		"plotty": "^0.2.0"
 	}
