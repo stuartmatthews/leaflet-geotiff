@@ -18,7 +18,7 @@ L.LeafletGeotiff.VectorArrows = L.LeafletGeotiffRenderer.extend({
         this.parent._reset();
     },
 	
-	render(raster, ctx, args) {
+	render: function(raster, canvas, ctx, args) {
 		var arrowSize = this.options.arrowSize;
 		var gridPxelSize = (args.rasterPixelBounds.max.x - args.rasterPixelBounds.min.x) / raster.width;
 		var stride = Math.max(1,Math.floor(1.2*arrowSize/gridPxelSize)); 

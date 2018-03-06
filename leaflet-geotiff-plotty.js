@@ -27,10 +27,6 @@ L.LeafletGeotiff.Plotty = L.LeafletGeotiffRenderer.extend({
 		this._preLoadColorScale();
 	},
 
-	setParent: function(parent) {
-		this.parent = parent;
-	},
-
     setColorScale: function (colorScale) {
         this.options.colorScale = colorScale;
         this.parent._reset();
@@ -56,17 +52,17 @@ L.LeafletGeotiff.Plotty = L.LeafletGeotiffRenderer.extend({
         this.colorScaleData = plot.colorScaleCanvas.toDataURL();            
     },
 	
-	render(raster, ctx, args) {
+	render: function(raster, canvas, ctx, args) {
 		var plottyCanvas = document.createElement("canvas");
 		var plot = new plotty.plot({
-			data: this.parent.raster.data,
-			width: this.parent.width, height: this.parent.raster.height,
+			data: raster.data,
+			width: raster.width, height: raster.height,
 			domain: [this.options.displayMin, this.options.displayMax], 
 			colorScale: this.options.colorScale,
 			clampLow: this.options.clampLow,
 			clampHigh: this.options.clampHigh,
 			canvas: plottyCanvas,
-			useWebGL: false,
+			useWebGL: false
 		});
 		plot.setNoDataValue(-9999); 
 		plot.render();

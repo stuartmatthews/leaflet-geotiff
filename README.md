@@ -40,7 +40,7 @@ Options:
 - `displayMin` - (optional, default = 0) Minimum values to plot.
 - `displayMax` - (optional, default = 1) Maximum values to plot.
 - `clampLow`, `clampHigh` - (optional, default = true) If true values outside `displayMin` to `displayMax` will be rendered as if they were valid values.
-- `colorScale` - (optional, default = "rainbow").  Plotty color scale used to render the image.
+- `colorScale` - (optional, default = "viridis").  Plotty color scale used to render the image.
 
 New color scales can be created using plotty's `addColorScale` method.
 

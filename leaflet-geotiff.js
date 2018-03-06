@@ -208,7 +208,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
             var ctx = plotCanvas.getContext("2d");
             ctx.clearRect(0, 0, plotCanvas.width, plotCanvas.height);
 
-			this.options.renderer.render(this.raster, ctx, args);
+			this.options.renderer.render(this.raster, plotCanvas, ctx, args);
    
             //Draw clipping polygon
             if (this.options.clip) {
@@ -228,7 +228,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
         }
     },
 
-	transform(canvas, args) {
+	transform: function(canvas, args) {
 		var rasterImageData = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height);
 
 		//Create image data and Uint32 views of data to speed up copying
@@ -279,14 +279,16 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
 });
 
 L.LeafletGeotiffRenderer = L.Class.extend({
-		
-	vector: false,
+	
+	initialize: function(options) {		
+        L.setOptions(this, options);
+	},
 
 	setParent: function(parent) {
 		this.parent = parent;
 	},
 
-	render(raster, ctx, args) {
+	render: function(raster, canvas, ctx, args) {
 		throw new Error('Abstract class');
 	}
 
