@@ -8,6 +8,11 @@
 
 // Note this will only work with ESPG:4326 tiffs
 
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+	var L = require('leaflet');
+	var plotty = require('plotty');
+	var GeoTIFF = require('geotiff');
+}
 
 L.LeafletGeotiff = L.ImageOverlay.extend({
     initialize: function (url, options) { 
@@ -348,3 +353,7 @@ L.LeafletGeotiff = L.ImageOverlay.extend({
 L.leafletGeotiff = function (url, bounds, options) {
     return new L.LeafletGeotiff(url, bounds, options);
 };
+
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+	module.exports = L.leafletGeotiff;
+}
